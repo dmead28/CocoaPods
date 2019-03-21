@@ -60,7 +60,7 @@ module Pod
         puts "*****"
         puts "targets #{targets}"
         puts "targets_to_integrate #{targets_to_integrate}"
-        puts caller
+        puts ""
 
         @targets = targets
         @targets_to_integrate = targets_to_integrate
@@ -74,7 +74,6 @@ module Pod
       #
       def integrate!
         create_workspace
-        clean_old_references
         integrate_user_targets
         warn_about_xcconfig_overrides
         save_projects
@@ -132,6 +131,8 @@ module Pod
       # @return [void]
       #
       def integrate_user_targets
+        puts "integrate_user_targets"
+        puts "targets_to_integrate #{targets_to_integrate}"
         target_integrators = targets_to_integrate.sort_by(&:name).map do |target|
           TargetIntegrator.new(target, :use_input_output_paths => use_input_output_paths?)
         end
@@ -142,10 +143,14 @@ module Pod
           all_native_targets = targets_to_integrate.flat_map(&:user_targets).uniq
           targets_to_deintegrate = all_project_targets - all_native_targets
           targets_to_deintegrate.each do |target|
+            puts "deintegrate #{target}"
             deintegrator.deintegrate_target(target)
+            target.remove_from_project
           end
         end
 
+        puts "target_integrators #{target_integrators}"
+        puts ""
         target_integrators.each(&:integrate!)
       end
 
@@ -154,10 +159,13 @@ module Pod
       # @return [void]
       #
       def save_projects
+        puts "save_projects"
+        puts "user_projects_to_integrate #{user_projects_to_integrate}"
         user_projects_to_integrate.each do |project|
           if project.dirty?
             project.save
           else
+            puts "!! touch #{project.path + 'project.pbxproj'}"
             # There is a bug in Xcode where the process of deleting and
             # re-creating the xcconfig files used in the build
             # configuration cause building the user project to fail until
@@ -255,7 +263,7 @@ module Pod
           build_phase = native_target.frameworks_build_phase
           product_references = build_phase.files.select do |build_file|
             build_file.display_name =~ Pod::Deintegrator::FRAMEWORK_NAMES
-          end
+          end.map(&:file_ref)
           [native_target.project, product_references]
         end.uniq]
 
@@ -267,11 +275,14 @@ module Pod
           end
         end.uniq
 
-        (x - product_references).each do |crap|
+        y = target_product_references.values.flatten
+        (x - y).each do |crap|
+          puts "remove #{crap}"
           crap.remove_from_project
         end
         puts "========== 2 #{x}"
-        puts "========== 3 #{x - product_references}"
+        puts "========== 3 #{y}"
+        puts "========== 4 #{x - y}"
       end
 
       # Prints a warning informing the user that a build configuration of
