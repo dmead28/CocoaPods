@@ -130,6 +130,28 @@ module Pod
           end
         end
 
+        y = targets_to_integrate.map(&:product_name)
+        puts "#{y}"
+
+        x = targets.map(&:user_project).flat_map do |user_project|
+          user_project['Frameworks'].files.select do |shit|
+            shit.display_name =~ Pod::Deintegrator::FRAMEWORK_NAMES
+          end
+        end.uniq
+
+        puts "#{x.map(&:display_name)}"
+        # puts "diff #{x-y}"
+
+        z = x.reject do |file_ref|
+          y.include?(file_ref.display_name)
+        end
+
+        puts "diff #{z}"
+
+        z.each do |file_ref|
+          file_ref.remove_from_project
+        end
+
         target_integrators.each(&:integrate!)
       end
 
