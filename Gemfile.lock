@@ -42,13 +42,6 @@ GIT
       nanaimo (~> 0.2.6)
 
 GIT
-  remote: https://github.com/CocoaPods/cocoapods-deintegrate.git
-  revision: f0b5281cafe0b31b74ecf9a59524c301359d5c49
-  branch: master
-  specs:
-    cocoapods-deintegrate (1.0.3)
-
-GIT
   remote: https://github.com/CocoaPods/cocoapods-downloader.git
   revision: bc9e262fb441fdbea039a7d676e1193a32f50b11
   branch: master
@@ -99,6 +92,11 @@ GIT
   branch: seg-1.7.7-ruby-2.2
   specs:
     json (1.7.7)
+
+PATH
+  remote: ../cocoapods-deintegrate
+  specs:
+    cocoapods-deintegrate (1.0.3)
 
 PATH
   remote: .
