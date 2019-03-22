@@ -278,7 +278,7 @@ module Pod
 
         y = target_product_references.values.flatten
         (x - y).each do |target|
-          puts "remove #{crap}"
+          puts "remove #{target}"
           target.remove_from_project
         end
         puts "========== 2 #{x}"
