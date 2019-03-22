@@ -75,6 +75,7 @@ module Pod
       def integrate!
         create_workspace
         integrate_user_targets
+        clean_old_references
         warn_about_xcconfig_overrides
         save_projects
       end
@@ -276,13 +277,14 @@ module Pod
         end.uniq
 
         y = target_product_references.values.flatten
-        (x - y).each do |crap|
+        (x - y).each do |target|
           puts "remove #{crap}"
-          crap.remove_from_project
+          target.remove_from_project
         end
         puts "========== 2 #{x}"
         puts "========== 3 #{y}"
         puts "========== 4 #{x - y}"
+        puts ""
       end
 
       # Prints a warning informing the user that a build configuration of
