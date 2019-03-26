@@ -52,30 +52,127 @@ module Pod
         end
 
         it 'deintegrates targets that are not associated with the podfile' do
-          additional_project = Xcodeproj::Project.new('Project.xcodeproj')
-          Deintegrator.any_instance.expects(:deintegrate_target).with additional_project.new_target(:application, 'Other App', :ios)
-          user_project = @target.user_project
-          user_project.native_targets.each do |target|
-            next if %w(SampleProject SampleProjectTests).include?(target.name)
-            Deintegrator.any_instance.expects(:deintegrate_target).with(target)
+          podfile = Podfile.new do
+            platform :ios
+            project @sample_project_path
+            target 'SampleProject' do
+              pod 'JSONKit'
+              target 'SampleProjectTests' do
+              end
+            end
           end
-          @integrator.stubs(:user_projects).returns([additional_project, user_project])
 
-          @integrator.send(:deintegrate_removed_targets)
+          user_build_configurations = { 'Release' => :release, 'Debug' => :debug }
+          project = Xcodeproj::Project.open(@sample_project_path)
+
+          t = AggregateTarget.new(config.sandbox, false, user_build_configurations, [],
+            Platform.ios, podfile.target_definitions['SampleProject'],
+            @sample_project_path.dirname, project, ['A346496C14F9BE9A0080D870'], {})
+
+          t2 = AggregateTarget.new(config.sandbox, false, user_build_configurations, [],
+              Platform.ios, podfile.target_definitions['SampleProjectTests'],
+              @sample_project_path.dirname, project, ['C0C495321B9E5C47004F9854'], {})
+
+          integrator = UserProjectIntegrator.new(podfile, config.sandbox, temporary_directory, [t, t2], [t, t2])
+          integrator.integrate!
+
+          t.user_targets.first.frameworks_build_phase.files.find { |f| f.display_name == 'libPods-SampleProject.a' }.should.not.be.nil
+          t.user_targets.first.build_phases.map(&:display_name).should == [
+            '[CP] Check Pods Manifest.lock',
+            'Sources',
+            'Frameworks',
+            'Resources',
+          ]
+
+          t2.user_targets.first.frameworks_build_phase.files.find { |f| f.display_name == 'libPods-SampleProject-SampleProjectTests.a' }.should.not.be.nil
+          #t2 expect that  libPods ['Frameworks'] is there
+          #foo = t2.user_project['Frameworks']
+          #puts "** foo #{foo}"
+          t2.user_targets.first.build_phases.map(&:display_name).should == [
+            '[CP] Check Pods Manifest.lock',
+            'Sources',
+            'Frameworks',
+            'Resources',
+          ]
+
+          integrator = UserProjectIntegrator.new(podfile, config.sandbox, temporary_directory, [t], [t])
+          integrator.integrate!
+
+          t.user_targets.first.frameworks_build_phase.files .find { |f| f.display_name == 'libPods-SampleProject.a' }.should.not.be.nil
+          t.user_targets.first.build_phases.map(&:display_name).should == [
+            '[CP] Check Pods Manifest.lock',
+            'Sources',
+            'Frameworks',
+            'Resources',
+          ]
+          t2.user_targets.first.frameworks_build_phase.files .find { |f| f.display_name == 'libPods-SampleProject-SampleProjectTests.a' }.should.be.nil
+          #t2 expect that  libPods ['Frameworks'] is gone
+          t2.user_targets.first.build_phases.map(&:display_name).should == [
+            'Sources',
+            'Frameworks',
+            'Resources',
+          ]
         end
 
         it 'deintegrates targets that are not associated with the podfile even with incremental installation on' do
-          @integrator = UserProjectIntegrator.new(@podfile, config.sandbox, temporary_directory, [@target, @empty_library], [])
-          additional_project = Xcodeproj::Project.new('Project.xcodeproj')
-          Deintegrator.any_instance.expects(:deintegrate_target).with additional_project.new_target(:application, 'Other App', :ios)
-          user_project = @target.user_project
-          user_project.native_targets.each do |target|
-            next if %w(SampleProject SampleProjectTests).include?(target.name)
-            Deintegrator.any_instance.expects(:deintegrate_target).with(target)
+          podfile = Podfile.new do
+            platform :ios
+            project @sample_project_path
+            target 'SampleProject' do
+              pod 'JSONKit'
+              target 'SampleProjectTests' do
+              end
+            end
           end
-          @integrator.stubs(:user_projects).returns([additional_project, user_project])
 
-          @integrator.send(:deintegrate_removed_targets)
+          user_build_configurations = { 'Release' => :release, 'Debug' => :debug }
+          project = Xcodeproj::Project.open(@sample_project_path)
+
+          t = AggregateTarget.new(config.sandbox, false, user_build_configurations, [],
+            Platform.ios, podfile.target_definitions['SampleProject'],
+            @sample_project_path.dirname, project, ['A346496C14F9BE9A0080D870'], {})
+
+          t2 = AggregateTarget.new(config.sandbox, false, user_build_configurations, [],
+              Platform.ios, podfile.target_definitions['SampleProjectTests'],
+              @sample_project_path.dirname, project, ['C0C495321B9E5C47004F9854'], {})
+
+          integrator = UserProjectIntegrator.new(podfile, config.sandbox, temporary_directory, [t, t2], [t, t2])
+          integrator.integrate!
+
+          t.user_targets.first.frameworks_build_phase.files .find { |f| f.display_name == 'libPods-SampleProject.a' }.should.not.be.nil
+          t.user_targets.first.build_phases.map(&:display_name).should == [
+            '[CP] Check Pods Manifest.lock',
+            'Sources',
+            'Frameworks',
+            'Resources',
+          ]
+
+          t2.user_targets.first.frameworks_build_phase.files .find { |f| f.display_name == 'libPods-SampleProject-SampleProjectTests.a' }.should.not.be.nil
+          #t2 expect that  libPods ['Frameworks'] is there
+          t2.user_targets.first.build_phases.map(&:display_name).should == [
+            '[CP] Check Pods Manifest.lock',
+            'Sources',
+            'Frameworks',
+            'Resources',
+          ]
+
+          integrator = UserProjectIntegrator.new(podfile, config.sandbox, temporary_directory, [t], [])
+          integrator.integrate!
+
+          t.user_targets.first.frameworks_build_phase.files .find { |f| f.display_name == 'libPods-SampleProject.a' }.should.not.be.nil
+          t.user_targets.first.build_phases.map(&:display_name).should == [
+            '[CP] Check Pods Manifest.lock',
+            'Sources',
+            'Frameworks',
+            'Resources',
+          ]
+          t2.user_targets.first.frameworks_build_phase.files .find { |f| f.display_name == 'libPods-SampleProject-SampleProjectTests.a' }.should.be.nil
+          #t2 expect that  libPods ['Frameworks'] is gone
+          t2.user_targets.first.build_phases.map(&:display_name).should == [
+            'Sources',
+            'Frameworks',
+            'Resources',
+          ]
         end
 
         describe '#warn_about_xcconfig_overrides' do
