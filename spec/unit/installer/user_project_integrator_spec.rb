@@ -154,7 +154,7 @@ module Pod
           ]
 
           t2.user_targets.first.frameworks_build_phase.files .find { |f| f.display_name == 'libPods-SampleProject-SampleProjectTests.a' }.should.not.be.nil
-          #t2 expect that  libPods ['Frameworks'] is there
+          t2.user_project['Frameworks'].files.find { |f| f.display_name == 'libPods-SampleProject-SampleProjectTests.a' }.should.not.be.nil
           t2.user_targets.first.build_phases.map(&:display_name).should == [
             '[CP] Check Pods Manifest.lock',
             'Sources',
@@ -173,7 +173,7 @@ module Pod
             'Resources',
           ]
           t2.user_targets.first.frameworks_build_phase.files .find { |f| f.display_name == 'libPods-SampleProject-SampleProjectTests.a' }.should.be.nil
-          #t2 expect that  libPods ['Frameworks'] is gone
+          t2.user_project['Frameworks'].files.find { |f| f.display_name == 'libPods-SampleProject-SampleProjectTests.a' }.should.be.nil
           t2.user_targets.first.build_phases.map(&:display_name).should == [
             'Sources',
             'Frameworks',
