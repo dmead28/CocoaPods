@@ -85,33 +85,37 @@ module Pod
           ]
 
           t2.user_targets.first.frameworks_build_phase.files.find { |f| f.display_name == 'libPods-SampleProject-SampleProjectTests.a' }.should.not.be.nil
-          #t2 expect that  libPods ['Frameworks'] is there
-          #foo = t2.user_project['Frameworks']
-          #puts "** foo #{foo}"
           t2.user_targets.first.build_phases.map(&:display_name).should == [
             '[CP] Check Pods Manifest.lock',
             'Sources',
             'Frameworks',
             'Resources',
           ]
+          #t2 expect that  libPods ['Frameworks'] is there
+          foo = t2.user_project['Frameworks']
+          puts "** foo #{foo}"
+          puts foo.files.map(&:display_name).join("\n  ")
 
           integrator = UserProjectIntegrator.new(podfile, config.sandbox, temporary_directory, [t], [t])
           integrator.integrate!
 
-          t.user_targets.first.frameworks_build_phase.files .find { |f| f.display_name == 'libPods-SampleProject.a' }.should.not.be.nil
+          t.user_targets.first.frameworks_build_phase.files.find { |f| f.display_name == 'libPods-SampleProject.a' }.should.not.be.nil
           t.user_targets.first.build_phases.map(&:display_name).should == [
             '[CP] Check Pods Manifest.lock',
             'Sources',
             'Frameworks',
             'Resources',
           ]
-          t2.user_targets.first.frameworks_build_phase.files .find { |f| f.display_name == 'libPods-SampleProject-SampleProjectTests.a' }.should.be.nil
-          #t2 expect that  libPods ['Frameworks'] is gone
+          t2.user_targets.first.frameworks_build_phase.files.find { |f| f.display_name == 'libPods-SampleProject-SampleProjectTests.a' }.should.be.nil
           t2.user_targets.first.build_phases.map(&:display_name).should == [
             'Sources',
             'Frameworks',
             'Resources',
           ]
+          #t2 expect that  libPods ['Frameworks'] is gone
+          bar = t2.user_project['Frameworks']
+          puts "** bar #{bar}"
+          puts bar.files.map(&:display_name).join("\n  ")
         end
 
         it 'deintegrates targets that are not associated with the podfile even with incremental installation on' do
