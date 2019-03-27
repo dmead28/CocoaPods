@@ -95,6 +95,7 @@ module Pod
           foo = t2.user_project['Frameworks']
           puts "** foo #{foo}"
           puts foo.files.map(&:display_name).join("\n  ")
+          t2.user_project['Frameworks'].files.find { |f| f.display_name == 'libPods-SampleProject-SampleProjectTests.a' }.should.not.be.nil
 
           integrator = UserProjectIntegrator.new(podfile, config.sandbox, temporary_directory, [t], [t])
           integrator.integrate!
@@ -116,6 +117,7 @@ module Pod
           bar = t2.user_project['Frameworks']
           puts "** bar #{bar}"
           puts bar.files.map(&:display_name).join("\n  ")
+          t2.user_project['Frameworks'].files.find { |f| f.display_name == 'libPods-SampleProject-SampleProjectTests.a' }.should.be.nil
         end
 
         it 'deintegrates targets that are not associated with the podfile even with incremental installation on' do
