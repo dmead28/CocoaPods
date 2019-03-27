@@ -32,9 +32,6 @@ module Pod
       #-----------------------------------------------------------------------#
 
       describe 'In general' do
-        before do
-          @integrator.stubs(:warn_about_xcconfig_overrides)
-        end
 
         it 'adds the Pods project to the workspace' do
           @integrator.integrate!
